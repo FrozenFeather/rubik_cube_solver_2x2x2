@@ -128,16 +128,16 @@ class Cube{
     switch(direction){
       case U:
         if(magnitude == 1){
-          exchangeBlocks(new byte[]{0,1,3,2}, new byte[]{2,0,1,3});
-        }else{
           exchangeBlocks(new byte[]{0,1,3,2}, new byte[]{1,3,2,0});
+        }else{
+          exchangeBlocks(new byte[]{0,1,3,2}, new byte[]{2,0,1,3});
         }
         break;
       case D:
         if(magnitude == 1){
-          exchangeBlocks(new byte[]{4,5,7,6}, new byte[]{6,4,5,7});
-        }else{
           exchangeBlocks(new byte[]{4,5,7,6}, new byte[]{5,7,6,4});
+        }else{
+          exchangeBlocks(new byte[]{4,5,7,6}, new byte[]{6,4,5,7});
         }
         break;
       case F:

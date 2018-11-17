@@ -1,6 +1,6 @@
 // Main Solve
 // Usin IDA*(Iterative Deepening A*)
-// To explore steps up to 12
+// To explore steps up to 10
 // If no solution, add a few random move and then explore again
 // Heuristic: Mainly ManhattanDistance of the blocks, add some special cases
 
@@ -14,13 +14,12 @@ byte[] specialCase = {1,3,0,2,6,4,7,5};
 int h(byte[][] cubeConfig){
   int h = 0;
   int totalD = 3, maxD = 0;
-  int ds[] = new int[8];
-  int maxCount = 0;
-  for(byte i = 0; i < 8; i++){
+  int allp = 7, alln = 0;
+  for(int i = 0; i < 8; i++){
     byte bIndex = cubeConfig[i][0];
     byte bDirection = cubeConfig[i][1];
     // Get the manhattanDistance
-    int d = manhattanDistance(i, bIndex);
+    int d = manhattanDistance((byte)i, bIndex);
     if(d == 0 && bDirection != 0)
       // If the block is in correct position but wrong orientation
       // At least 2 moves are needed
@@ -39,17 +38,18 @@ int h(byte[][] cubeConfig){
           d += 2;
       }
     }
-    ds[i] = d;
     totalD += d;
     if(d > maxD){
       maxD = d;
-      maxCount = 1;
+      allp = i;
+      alln = i;
     }else if(d == maxD){
-      maxCount++;
+      allp &= i;
+      alln |= i;
     }
   }
   // Idea: Since 1 turn can only move 4 blocks
-  // So at least total distance / 4 is needed
+  // So at least total distance / 4 is needed (+3 in advance to simulate math.ceil
   // Introduce the maximum manhattan distance of 1 particular block
   // Use Max to find out which heuristic is better
   int avgD = totalD / 4;
@@ -58,21 +58,16 @@ int h(byte[][] cubeConfig){
   else{
     h = maxD;
     // If max manhattan distance is chosen
-    // Then if >= 2 blocks which are at opposite corner
+    // Then if all block with max dist are not on the same plane
     // Then at least 1 more move is needed as any move may move only one of them
-    if(maxCount > 1 && maxD > 0){
-      for(int i = 0; i < 4; i++){
-        if(ds[i] == maxD && ds[7-i] == maxD){
-          h++;
-          break;
-        }
-      }
+    if(maxD > 0 && allp == 0 && alln == 7){
+      h++;
     }
   }
   return h;
 }
 
-int maxDepth = 11;
+int maxDepth = 10;
 byte FOUND = -1;
 long time = 0;
 final long maxTime = 20000;
@@ -84,6 +79,7 @@ byte path[][] = new byte[maxDepth+1][2];
 // Reference: https://en.wikipedia.org/wiki/Iterative_deepening_A*
 int solveByIDAStar(Cube cubeGiven){
   cube = cubeGiven;
+  path = new byte[maxDepth+1][2];
   byte[][] config = cube.config;
   int bound = h(config);
   time = millis();
@@ -91,7 +87,7 @@ int solveByIDAStar(Cube cubeGiven){
     int t = search(config, 0, bound);
     if(t == FOUND)
       return FOUND;
-    if(t >= maxDepth){
+    if(t > maxDepth){
       cube.config = config;
       return maxDepth;
     }
@@ -103,8 +99,9 @@ int search(byte[][] config, int g, int bound){
   int hValue = h(config);
   if(hValue == 0)
     return FOUND;
-  if(g + hValue > bound)
-    return g + hValue;
+  int f = g + hValue;
+  if(f > bound)
+    return f;
   int minValue = 100;
   nextOrientation:
   for(int orientation = 0; orientation < 6; orientation++){

@@ -4,11 +4,15 @@
 // Guide
 // '0':   random shuffle the cube
 // SPACE: try to solve the cube
+// To turn the cube:
+// t:U    y:U'    v:D'    b:D
+// q:F'   z:F     w:B     x:B'
+// o:L'   m:L     p:R     ,:R;
 
-int DEPTH_12_WITH_RANDOM_5_MOVES = 0;  // Explore one more depth need more time (~13s)
-int DEPTH_11_WITH_RANDOM_2_MOVES = 1;  // Allow quick restart may fall from optimal (~2s)
+int DEPTH_10_WITH_RANDOM_5_MOVES = 0;  // Explore one more depth need more time (~13s)
+int DEPTH_9_WITH_RANDOM_2_MOVES = 1;  // Allow quick restart may fall from optimal (~2s)
 // Define the solving mode
-int SOLVING_MODE = DEPTH_12_WITH_RANDOM_5_MOVES;
+int SOLVING_MODE = DEPTH_10_WITH_RANDOM_5_MOVES;
 
 // The cube to be dealt with
 Cube cube;
@@ -31,10 +35,10 @@ void setup(){
       new Block((byte)7, new byte[]{Block.YELLOW, Block.BLUE,   Block.RED},    (byte)0)
     };
     
-    if(SOLVING_MODE == DEPTH_12_WITH_RANDOM_5_MOVES){
-      maxDepth = 11;
-    }else{
+    if(SOLVING_MODE == DEPTH_10_WITH_RANDOM_5_MOVES){
       maxDepth = 10;
+    }else{
+      maxDepth = 9;
     }
     
     cube = new Cube(blocks);
@@ -47,16 +51,16 @@ void draw(){
 void keyPressed(){
   switch(key){
     case 't':
-      cube.turn(Cube.U,(byte)1);
-      break;
-    case 'y':
       cube.turn(Cube.U,(byte)-1);
       break;
+    case 'y':
+      cube.turn(Cube.U,(byte)1);
+      break;
     case 'v':
-      cube.turn(Cube.D,(byte)1);
+      cube.turn(Cube.D,(byte)-1);
       break;
     case 'b':
-      cube.turn(Cube.D,(byte)-1);
+      cube.turn(Cube.D,(byte)1);
       break;
     case 'q':
       cube.turn(Cube.F,(byte)1);
@@ -91,9 +95,10 @@ void keyPressed(){
     case ' ':
       long time = millis();
       int noOfSteps = 0;
+      byte originalConfig[][] = cube.config;
       while(solveByIDAStar(cube) != FOUND){
         int noOfRandomMove = 2;
-        if(SOLVING_MODE == DEPTH_12_WITH_RANDOM_5_MOVES){
+        if(SOLVING_MODE == DEPTH_10_WITH_RANDOM_5_MOVES){
           noOfRandomMove = 5;
         }
         for(int i=0; i<noOfRandomMove; i++){
@@ -104,10 +109,10 @@ void keyPressed(){
           printMove(m,d);
           noOfSteps ++;
         }
-      //println("time ellapsed: " + (millis()-time));
+        //println("time ellapsed: " + (millis()-time));
       }
       for(int i = 0; i < maxDepth + 1; i++){
-        if(path[i][1] == 0) break;
+        if(path[i][1] == 0 || path[i][1] == -2) break;
         printMove(path[i][0], path[i][1]);
         noOfSteps++;
       }
@@ -151,12 +156,21 @@ void printMove(int orientation, int direction){
       print("B");
       break;
   }
-  switch(direction){
-    case 1:
-      print("a");
+  switch(orientation){
+    case Cube.U:
+    case Cube.R:
+    case Cube.F:
+      if(direction == 1){
+        print("'");
+      }
       break;
-    case -1:
-      print("c");
+    case Cube.L:
+    case Cube.D:
+    case Cube.B:
+      if(direction == -1){
+        print("'");
+      }
+      break;
   }
   print(" ");
 }
